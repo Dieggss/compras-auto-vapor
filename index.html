@@ -103,7 +103,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .estado .caja svg { width: 18px; height: 18px; opacity: 0; }
 .item.ok .estado { background: var(--ok); color: var(--surface); border-right-color: var(--ok); }
 .item.ok .estado .caja { border-color: var(--surface); background: var(--surface); }
-.item.ok .estado .caja svg { opacity: 1; color: var(--ok); }
+.item.ok .estado .caja .i-ok { opacity: 1; color: var(--ok); }
+.estado .caja .i-cot { display: none; }
+.item.cot { background: color-mix(in srgb, var(--p2-soft) 45%, var(--surface)); }
+.item.cot .estado { background: var(--p2-soft); color: var(--p2); }
+.item.cot .estado .caja { border-color: var(--p2); }
+.item.cot .estado .caja .i-ok { display: none; }
+.item.cot .estado .caja .i-cot { display: block; opacity: 1; color: var(--p2); }
+.b-cot { margin-left: auto; align-self: center; border: 1px solid var(--p2); background: none; color: var(--p2); padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.b-cot[aria-pressed="true"] { background: var(--p2); color: var(--surface); }
+.cifra .v.cot { color: var(--p2); }
 .cuerpo { padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
 .fila1 { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
 .nombre { font-family: var(--f-disp); font-size: 21px; font-weight: 700; line-height: 1.1; }
@@ -216,6 +225,7 @@ td select { padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px;
       <div class="seg" role="group" aria-label="Estado">
         <button data-f="todos" aria-pressed="true">Todos</button>
         <button data-f="faltan" aria-pressed="false">Faltan</button>
+        <button data-f="cot" aria-pressed="false">Cotizando</button>
         <button data-f="ok" aria-pressed="false">Conseguidos</button>
       </div>
       <select id="sistema" aria-label="Sistema"><option value="">Todos los sistemas</option></select>
@@ -290,7 +300,8 @@ const hace = t => {
 };
 const linkSeguro = u => { u = (u || "").trim(); if (!u) return ""; if (!/^https?:\/\//i.test(u)) u = "https://" + u; try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ""; } catch { return ""; } };
 const toast = msg => { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2200); };
-const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const ICON_COT = '<svg class="i-cot" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="18" cy="12" r="2.2"/></svg>';
+const ICON_OK = '<svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 
 /* ---------- estado compartido ---------- */
 let S = {};                 // id -> estado guardado
@@ -389,8 +400,9 @@ const filas = new Map(); // id -> {nodo, actualizar}
 function fichaMaterial(m) {
   const r = {};
   const nodo = el("article", { class: "item", id: "m-" + m.id });
-  const boton = el("button", { class: "estado", type: "button", onclick: () => { const ok = !st(m.id).ok; guardar(m.id, { ok, okAt: ok ? Date.now() : null, okPor: ok ? (yo || "Alguien") : null }, true); toast(ok ? "Marcado como conseguido" : "Marcado como pendiente"); } });
-  boton.innerHTML = `<span class="caja">${ICON_OK}</span><span class="t"></span>`;
+  const boton = el("button", { class: "estado", type: "button", onclick: () => { const ok = !st(m.id).ok; guardar(m.id, { ok, okAt: ok ? Date.now() : null, okPor: ok ? (yo || "Alguien") : null, ...(ok ? { cot: false } : {}) }, true); toast(ok ? "Marcado como conseguido" : "Marcado como pendiente"); } });
+  boton.innerHTML = `<span class="caja">${ICON_OK}${ICON_COT}</span><span class="t"></span>`;
+  r.cot = el("button", { class: "b-cot", type: "button", onclick: () => { const cot = !st(m.id).cot; guardar(m.id, { cot, cotAt: cot ? Date.now() : null, cotPor: cot ? (yo || "Alguien") : null }, true); toast(cot ? "Marcado como cotizando" : "Ya no está cotizando"); } });
   r.estadoTxt = boton.querySelector(".t");
   r.nombre = el("span", { class: "nombre" });
   r.mod = el("span", { class: "pill mod", text: "editado" });
@@ -416,7 +428,7 @@ function fichaMaterial(m) {
 
   nodo.append(boton, el("div", { class: "cuerpo" },
     el("div", { class: "fila1" }, el("span", { class: "num mono", text: "#" + String(m.n).padStart(2, "0") }), r.nombre,
-      el("span", { class: `pill p${m.pri}`, text: "Prioridad " + m.pri }), el("span", { class: "pill sis", text: m.sis.toLowerCase() }), r.cant, r.mod),
+      el("span", { class: `pill p${m.pri}`, text: "Prioridad " + m.pri }), el("span", { class: "pill sis", text: m.sis.toLowerCase() }), r.cant, r.mod, r.cot),
     r.desc,
     el("div", { class: "meta" },
       m.uso ? el("span", {}, "Para: ", el("b", { text: m.uso })) : null,
@@ -440,10 +452,16 @@ function fichaMaterial(m) {
 
   const actualizar = () => {
     const s = st(m.id), v = m.custom ? { nombre: s.nombre || "Material nuevo", desc: s.desc || "" } : ver(m.id, m);
+    const cot = !s.ok && !!s.cot;
     nodo.classList.toggle("ok", !!s.ok);
-    r.estadoTxt.textContent = s.ok ? "Conseguido" : "Falta";
+    nodo.classList.toggle("cot", cot);
+    const etq = s.ok ? "Conseguido" : cot ? "Cotizando" : "Falta";
+    r.estadoTxt.textContent = etq;
     boton.setAttribute("aria-pressed", s.ok ? "true" : "false");
-    boton.setAttribute("aria-label", (s.ok ? "Conseguido: " : "Falta: ") + v.nombre + ". Cambiar estado");
+    boton.setAttribute("aria-label", etq + ": " + v.nombre + ". Marcar " + (s.ok ? "pendiente" : "conseguido"));
+    r.cot.hidden = !!s.ok;
+    r.cot.setAttribute("aria-pressed", cot ? "true" : "false");
+    r.cot.textContent = cot ? "Cotizando ✓" : "Marcar cotizando";
     r.nombre.textContent = v.nombre; r.desc.textContent = v.desc;
     r.mod.hidden = m.custom || !(s.nombre || s.desc); if (m.custom) { r.mod.hidden = false; r.mod.textContent = "agregado"; }
     r.cant.textContent = "× " + (m.custom ? (s.cant || "?") : m.cant);
@@ -457,6 +475,7 @@ function fichaMaterial(m) {
     const href = linkSeguro(s.link); r.abrir.hidden = !href; if (href) r.abrir.href = href;
     const partes = [];
     if (s.ok && s.okPor) partes.push(`Conseguido por ${s.okPor} ${hace(s.okAt)}`);
+    if (cot && s.cotPor) partes.push(`Cotizando: ${s.cotPor} ${hace(s.cotAt)}`);
     if (s.at) partes.push(`último cambio: ${s.por || "alguien"} ${hace(s.at)}`);
     r.firma.textContent = partes.join(" · ");
   };
@@ -469,7 +488,8 @@ function confirmarBorrar(b, id) {
 }
 function pasaFiltro(m) {
   const s = st(m.id);
-  if (filtro.estado === "faltan" && s.ok) return false;
+  if (filtro.estado === "faltan" && (s.ok || s.cot)) return false;
+  if (filtro.estado === "cot" && (s.ok || !s.cot)) return false;
   if (filtro.estado === "ok" && !s.ok) return false;
   if (filtro.sis && m.sis !== filtro.sis) return false;
   if (filtro.q) {
@@ -492,6 +512,7 @@ function renderMateriales() {
   for (const [k, ms] of grupos) {
     if (!ms.length) continue;
     const ok = ms.filter(m => st(m.id).ok).length;
+    const cotN = ms.filter(m => !st(m.id).ok && st(m.id).cot).length;
     const titulo = filtro.agrupar === "pri" ? `${k} · ${PRI[k]}` : filtro.agrupar === "sis" ? k.charAt(0) + k.slice(1).toLowerCase() : k;
     const lst = el("div", { class: "lista" });
     for (const m of ms) {
@@ -499,12 +520,12 @@ function renderMateriales() {
       if (!f || f.m.nombre0 !== m.nombre0 || f.m.custom !== m.custom) { f = fichaMaterial(m); filas.set(m.id, f); } else f.actualizar();
       lst.append(f.nodo);
     }
-    frag.append(el("section", { class: "grupo" }, el("header", {}, el("h2", { text: titulo }), el("span", { class: "cuenta", text: `${ok} de ${ms.length} conseguidos` })), lst));
+    frag.append(el("section", { class: "grupo" }, el("header", {}, el("h2", { text: titulo }), el("span", { class: "cuenta", text: `${ok} de ${ms.length} conseguidos` + (cotN ? ` · ${cotN} cotizando` : "") })), lst));
   }
   const foco = document.activeElement && cont.contains(document.activeElement) ? document.activeElement : null;
   cont.replaceChildren(frag);
   if (foco && document.body.contains(foco)) foco.focus({ preventScroll: true });
-  if (!visibles.length) cont.append(el("div", { class: "vacio", text: filtro.estado === "faltan" && !filtro.q ? "No falta nada con estos filtros. ¡Bien!" : "Nada coincide con la búsqueda o el filtro." }));
+  if (!visibles.length) cont.append(el("div", { class: "vacio", text: filtro.estado === "faltan" && !filtro.q ? "No falta nada sin cotizar con estos filtros." : filtro.estado === "cot" && !filtro.q ? "No hay nada marcado como cotizando." : "Nada coincide con la búsqueda o el filtro." }));
 }
 
 /* ---------- resumen ---------- */
@@ -520,8 +541,10 @@ function renderResumen() {
   for (const p of [1, 2, 3]) { const n = ok.filter(m => m.pri === p).length; if (n) barra.append(el("i", { class: "b" + p, style: `width:${100 * n / lista.length}%` })); }
   barra.setAttribute("aria-label", `${ok.length} de ${lista.length} materiales conseguidos`);
   const p1 = lista.filter(m => m.pri === 1), p1f = p1.filter(m => !st(m.id).ok).length;
+  const cot = lista.filter(m => !st(m.id).ok && st(m.id).cot).length;
   $("#cifras").replaceChildren(
     el("div", { class: "cifra" }, el("div", { class: "v" }, String(ok.length), el("small", { text: ` / ${lista.length}` })), el("div", { class: "d", text: `materiales conseguidos (${pct} %)` })),
+    el("div", { class: "cifra" }, el("div", { class: "v cot", text: String(cot) }), el("div", { class: "d", text: `cotizando · ${lista.length - ok.length - cot} faltan sin cotizar` })),
     el("div", { class: "cifra" }, el("div", { class: "v", text: pesos(gastado) }), el("div", { class: "d", text: `gastado · ${conPrecio} con valor anotado` })),
     el("div", { class: "cifra" }, el("div", { class: "v", text: pesos(gastado / 4) }), el("div", { class: "d", text: "por persona (4)" })),
     el("div", { class: "cifra" }, el("div", { class: "v", text: `${pesos(faltaMin)} – ${pesos(faltaMax).slice(1)}` }), el("div", { class: "d", text: "estimado de lo que falta (no verificado)" })),
@@ -604,14 +627,14 @@ function textoFaltan() {
   let out = "*Falta conseguir – auto a vapor*\n";
   for (const p of [1, 2, 3]) {
     const ms = lista.filter(m => m.pri === p); if (!ms.length) continue;
-    out += `\n*${p}) ${PRI[p]}*\n` + ms.map(m => `• ${m.nombre} (×${m.custom ? (st(m.id).cant || "?") : m.cant}): ${m.desc}${st(m.id).quien ? " → " + st(m.id).quien : ""}`).join("\n") + "\n";
+    out += `\n*${p}) ${PRI[p]}*\n` + ms.map(m => `• ${m.nombre} (×${m.custom ? (st(m.id).cant || "?") : m.cant}): ${m.desc}${st(m.id).cot ? " _(cotizando)_" : ""}${st(m.id).quien ? " → " + st(m.id).quien : ""}`).join("\n") + "\n";
   }
   return lista.length ? out : "¡Ya está todo conseguido!";
 }
 function csv() {
   const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const filasCsv = [["N", "Prioridad", "Sistema", "Nombre", "Descripción exacta", "Cantidad", "Para qué", "Paso", "Conseguido", "Valor", "Link", "Lo consigue", "Nota"]];
-  for (const m of materiales()) { const s = st(m.id); filasCsv.push([m.n, m.pri, m.sis, m.nombre, m.desc, m.custom ? s.cant : m.cant, m.uso, m.paso, s.ok ? "Sí" : "No", s.precio ?? "", s.link || "", s.quien || "", s.nota2 || ""]); }
+  const filasCsv = [["N", "Prioridad", "Sistema", "Nombre", "Descripción exacta", "Cantidad", "Para qué", "Paso", "Estado", "Valor", "Link", "Lo consigue", "Nota"]];
+  for (const m of materiales()) { const s = st(m.id); filasCsv.push([m.n, m.pri, m.sis, m.nombre, m.desc, m.custom ? s.cant : m.cant, m.uso, m.paso, s.ok ? "Conseguido" : s.cot ? "Cotizando" : "Falta", s.precio ?? "", s.link || "", s.quien || "", s.nota2 || ""]); }
   return "﻿" + filasCsv.map(f => f.map(q).join(";")).join("\r\n");
 }
 async function descargarCsv() {
