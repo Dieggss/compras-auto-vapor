@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Compras Auto a Vapor</title>
+</head>
+<body>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: taller de proyecto. Franja de avance arriba, pestañas, y fichas de material como etiquetas de bodega con estado a la izquierda. */
+:root {
+  --bg: #eceff0; --surface: #fbfbfa; --sunken: #e3e7e9; --ink: #1b2226; --muted: #59646b; --line: #cfd5d8;
+  --cobre: #a24f24; --cobre-fill: #c4672f; --cobre-soft: #f3e2d7; --on-cobre: #ffffff;
+  --ok: #26734a; --ok-soft: #dcefe3; --p1: #ad3328; --p1-soft: #f6dcd8; --p2: #8a6410; --p2-soft: #f4ead0; --p3: #3f6d32; --p3-soft: #e1edd9;
+  --focus: #2b6cb0;
+  --f-disp: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111517; --surface: #192023; --sunken: #0d1113; --ink: #e5e9eb; --muted: #97a3a9; --line: #2d363a;
+  --cobre: #e8925c; --cobre-fill: #d07240; --cobre-soft: #3a261b; --on-cobre: #1a0f09;
+  --ok: #62c58b; --ok-soft: #173325; --p1: #f08277; --p1-soft: #3b1c19; --p2: #e2b54e; --p2-soft: #352a12; --p3: #93c77d; --p3-soft: #1f2f19;
+  --focus: #7fb3ff; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #111517; --surface: #192023; --sunken: #0d1113; --ink: #e5e9eb; --muted: #97a3a9; --line: #2d363a;
+  --cobre: #e8925c; --cobre-fill: #d07240; --cobre-soft: #3a261b; --on-cobre: #1a0f09;
+  --ok: #62c58b; --ok-soft: #173325; --p1: #f08277; --p1-soft: #3b1c19; --p2: #e2b54e; --p2-soft: #352a12; --p3: #93c77d; --p3-soft: #1f2f19;
+  --focus: #7fb3ff; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--f-body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 64px; }
+h1, h2, h3 { font-family: var(--f-disp); font-weight: 700; letter-spacing: .01em; text-wrap: balance; margin: 0; line-height: 1.05; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+
+/* Encabezado */
+.top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: end; justify-content: space-between; }
+.top h1 { font-size: clamp(30px, 6vw, 44px); }
+.top h1 span { color: var(--cobre); }
+.sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.yo { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.yo select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.sync { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot.on { background: var(--ok); } .dot.warn { background: var(--p2); } .dot.bad { background: var(--p1); }
+
+.aviso { margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: var(--p2-soft); color: var(--ink); font-size: 13px; border: 1px solid var(--line); }
+.aviso b { color: var(--p2); }
+
+/* Franja de avance */
+.avance { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 14px; }
+.barra { height: 14px; border-radius: 7px; background: var(--sunken); overflow: hidden; display: flex; }
+.barra i { display: block; height: 100%; }
+.barra .b1 { background: var(--p1); } .barra .b2 { background: var(--p2); } .barra .b3 { background: var(--p3); }
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 18px; }
+.cifra .v { font-family: var(--f-disp); font-size: 28px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.cifra .v small { font-size: 16px; color: var(--muted); font-weight: 600; }
+.cifra .d { font-size: 12px; color: var(--muted); }
+.porpri { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; }
+.porpri span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+/* Pestañas */
+.tabs { display: flex; gap: 4px; margin-top: 22px; border-bottom: 2px solid var(--line); overflow-x: auto; }
+.tabs button { border: 0; background: none; padding: 10px 14px; font-family: var(--f-disp); font-size: 20px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--cobre-fill); }
+.tabs button .n { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-left: 4px; }
+
+/* Barra de herramientas */
+.tool { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+.tool input[type=search] { flex: 1 1 220px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.tool select { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; padding: 8px 12px; cursor: pointer; font-size: 13px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.btn:hover { border-color: var(--muted); }
+.btn.pri { background: var(--cobre-fill); border-color: var(--cobre-fill); color: var(--on-cobre); }
+.btn.mini { padding: 4px 9px; font-size: 12px; }
+.btn.peligro { color: var(--p1); }
+.tool .sp { flex: 1 1 0; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 8px; font-size: 13px; z-index: 20; }
+
+/* Grupos y fichas */
+.grupo { margin-top: 22px; }
+.grupo > header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.grupo > header h2 { font-size: 24px; }
+.grupo > header .cuenta { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.lista { display: grid; gap: 8px; margin-top: 10px; }
+
+.item { display: grid; grid-template-columns: 112px minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.item.ok { background: color-mix(in srgb, var(--ok-soft) 45%, var(--surface)); }
+.estado { border: 0; border-right: 1px solid var(--line); background: var(--sunken); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px 6px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.estado .caja { width: 30px; height: 30px; border-radius: 7px; border: 2px solid var(--muted); display: grid; place-items: center; background: var(--surface); }
+.estado .caja svg { width: 18px; height: 18px; opacity: 0; }
+.item.ok .estado { background: var(--ok); color: var(--surface); border-right-color: var(--ok); }
+.item.ok .estado .caja { border-color: var(--surface); background: var(--surface); }
+.item.ok .estado .caja svg { opacity: 1; color: var(--ok); }
+.cuerpo { padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
+.fila1 { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.nombre { font-family: var(--f-disp); font-size: 21px; font-weight: 700; line-height: 1.1; }
+.num { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
+.pill.p1 { background: var(--p1-soft); color: var(--p1); } .pill.p2 { background: var(--p2-soft); color: var(--p2); } .pill.p3 { background: var(--p3-soft); color: var(--p3); }
+.pill.sis { background: var(--sunken); color: var(--muted); }
+.pill.cant { background: var(--cobre-soft); color: var(--cobre); text-transform: none; letter-spacing: 0; font-family: var(--f-mono); font-weight: 500; }
+.pill.mod { background: var(--sunken); color: var(--cobre); }
+.desc { font-size: 14px; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 500; }
+.campos { display: grid; grid-template-columns: 150px minmax(0, 1fr) 150px; gap: 8px 10px; align-items: end; }
+.campo { display: grid; gap: 3px; min-width: 0; }
+.campo input, .campo select, .campo textarea { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); min-width: 0; }
+.campo textarea { resize: vertical; min-height: 38px; }
+.linkfila { display: flex; gap: 6px; min-width: 0; }
+.linkfila input { flex: 1 1 auto; }
+.linkfila a { display: inline-flex; align-items: center; padding: 0 10px; border-radius: 7px; background: var(--cobre-soft); color: var(--cobre); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.precio-wrap { position: relative; }
+.precio-wrap span { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--muted); font-family: var(--f-mono); }
+.precio-wrap input { padding-left: 20px; font-family: var(--f-mono); }
+.rango { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+details.mas { border-top: 1px dashed var(--line); padding-top: 8px; }
+details.mas summary { cursor: pointer; font-size: 13px; color: var(--cobre); font-weight: 600; list-style: none; }
+details.mas summary::-webkit-details-marker { display: none; }
+details.mas summary::before { content: "+ "; }
+details[open].mas summary::before { content: "− "; }
+.masg { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; }
+.masg .full { grid-column: 1 / -1; }
+.firma { font-size: 12px; color: var(--muted); }
+.acciones { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.vacio { padding: 28px 16px; text-align: center; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 10px; margin-top: 16px; }
+
+/* Tablas de cortes y herramientas */
+.tabla-wrap { overflow-x: auto; margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); background: var(--sunken); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+tr.hecho td { color: var(--muted); }
+tr.hecho td.pz { text-decoration: line-through; }
+td.chk { width: 48px; }
+td.chk input { width: 20px; height: 20px; accent-color: var(--ok); }
+td .medida { font-family: var(--f-mono); color: var(--cobre); white-space: nowrap; }
+td select { padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+
+/* Pasos */
+.etapa { margin-top: 20px; }
+.etapa h2 { font-size: 24px; display: flex; gap: 10px; align-items: baseline; }
+.etapa h2 .cuenta { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-weight: 400; }
+.pasos { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.paso { display: grid; grid-template-columns: 30px 52px minmax(0, 1fr) auto; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; }
+.paso input { width: 20px; height: 20px; accent-color: var(--ok); }
+.paso .cod { font-family: var(--f-mono); font-weight: 500; color: var(--cobre); }
+.paso.hecho .tit { text-decoration: line-through; color: var(--muted); }
+.paso .falta { font-size: 12px; color: var(--muted); grid-column: 3 / -1; }
+.chip { font-family: var(--f-mono); font-size: 12px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.listo { background: var(--ok-soft); color: var(--ok); }
+.chip.no { background: var(--p2-soft); color: var(--p2); }
+
+/* Agregar material */
+.nuevo { margin-top: 14px; background: var(--surface); border: 1px solid var(--cobre-fill); border-radius: 10px; padding: 14px; display: grid; gap: 10px; }
+.nuevo .g { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+
+@media (max-width: 680px) {
+  .item { grid-template-columns: 1fr; }
+  .estado { flex-direction: row; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px 12px; justify-content: flex-start; }
+  .item.ok .estado { border-bottom-color: var(--ok); }
+  .campos { grid-template-columns: 1fr 1fr; }
+  .campos .c-link { grid-column: 1 / -1; order: 3; }
+  .paso { grid-template-columns: 26px 44px minmax(0, 1fr); }
+  .paso .chip { grid-column: 3; justify-self: start; }
+}
+@media (prefers-reduced-motion: no-preference) { .item, .estado { transition: background-color .15s ease; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Auto a vapor <span>· compras</span></h1>
+      <div class="sub">Grupo 1 · Sistemas Térmicos · cada cambio queda guardado para todo el grupo</div>
+    </div>
+    <div style="display:grid;gap:6px;justify-items:end">
+      <label class="yo" for="yo">Soy
+        <select id="yo"><option value="">— elige —</option></select>
+      </label>
+      <div class="sync"><span class="dot" id="sync-dot"></span><span id="sync-txt">Conectando…</span></div>
+    </div>
+  </header>
+  <div class="aviso" id="aviso" hidden></div>
+
+  <section class="avance" aria-label="Avance de compras">
+    <div class="barra" id="barra" role="img" aria-label="Avance"></div>
+    <div class="cifras" id="cifras"></div>
+    <div class="porpri" id="porpri"></div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="t-materiales" aria-selected="true" data-tab="materiales">Materiales<span class="n" id="n-materiales"></span></button>
+    <button role="tab" id="t-cortes" aria-selected="false" data-tab="cortes">Cortes<span class="n" id="n-cortes"></span></button>
+    <button role="tab" id="t-herramientas" aria-selected="false" data-tab="herramientas">Herramientas<span class="n" id="n-herramientas"></span></button>
+    <button role="tab" id="t-pasos" aria-selected="false" data-tab="pasos">Paso a paso<span class="n" id="n-pasos"></span></button>
+  </nav>
+
+  <section id="v-materiales">
+    <div class="tool">
+      <input type="search" id="buscar" placeholder="Buscar: tapa, o-ring, bronce, M5…" aria-label="Buscar material">
+      <div class="seg" role="group" aria-label="Estado">
+        <button data-f="todos" aria-pressed="true">Todos</button>
+        <button data-f="faltan" aria-pressed="false">Faltan</button>
+        <button data-f="ok" aria-pressed="false">Conseguidos</button>
+      </div>
+      <select id="sistema" aria-label="Sistema"><option value="">Todos los sistemas</option></select>
+      <select id="agrupar" aria-label="Agrupar por">
+        <option value="pri">Agrupar por importancia</option>
+        <option value="sis">Agrupar por sistema</option>
+        <option value="quien">Agrupar por quién lo consigue</option>
+      </select>
+    </div>
+    <div class="tool">
+      <button class="btn pri" id="b-nuevo">+ Agregar material</button>
+      <button class="btn" id="b-copiar">Copiar lo que falta</button>
+      <button class="btn" id="b-csv">Descargar planilla (CSV)</button>
+    </div>
+    <form class="nuevo" id="f-nuevo" hidden>
+      <h3 style="font-size:20px">Material nuevo</h3>
+      <div class="g">
+        <div class="campo"><label class="lbl" for="n-nombre">Nombre genérico</label><input id="n-nombre" required placeholder="Ej.: Lija de fierro"></div>
+        <div class="campo"><label class="lbl" for="n-cant">Cantidad</label><input id="n-cant" placeholder="Ej.: 2"></div>
+        <div class="campo"><label class="lbl" for="n-pri">Importancia</label><select id="n-pri"><option value="1">1 · Difícil e importante</option><option value="2" selected>2 · Importante, fácil de hallar</option><option value="3">3 · Fácil / de la casa</option></select></div>
+        <div class="campo"><label class="lbl" for="n-sis">Sistema</label><select id="n-sis"></select></div>
+      </div>
+      <div class="campo"><label class="lbl" for="n-desc">Descripción exacta (lo que se pide en la tienda)</label><textarea id="n-desc" rows="2"></textarea></div>
+      <div class="campo"><label class="lbl" for="n-uso">Para qué</label><input id="n-uso"></div>
+      <div class="acciones"><button class="btn pri" type="submit">Agregar</button><button class="btn" type="button" id="n-cancelar">Cancelar</button></div>
+    </form>
+    <div id="materiales"></div>
+  </section>
+
+  <section id="v-cortes" hidden>
+    <p class="sub" style="margin-top:14px">Medida final de cada pieza. Marcar cuando esté cortada y medida con pie de metro.</p>
+    <div class="tabla-wrap"><table><thead><tr><th>Hecho</th><th>Pieza</th><th>De qué se saca</th><th>Medida final</th><th>Cant.</th><th>Cómo cortar</th><th>Paso</th></tr></thead><tbody id="cortes"></tbody></table></div>
+  </section>
+
+  <section id="v-herramientas" hidden>
+    <p class="sub" style="margin-top:14px">Anoten quién trae cada herramienta y marquen cuando ya esté en el taller.</p>
+    <div class="tabla-wrap"><table><thead><tr><th>Lista</th><th>Herramienta</th><th>Para qué</th><th>Si no la tienen</th><th>¿Quién la trae?</th></tr></thead><tbody id="herramientas"></tbody></table></div>
+  </section>
+
+  <section id="v-pasos" hidden>
+    <p class="sub" style="margin-top:14px">Los pasos de la guía de construcción, en orden. Al lado de cada uno se ve si ya están todos sus materiales.</p>
+    <div id="pasos"></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const DATOS = {"materiales": [{"id": "m01", "n": 1, "pri": 1, "sis": "CALDERA", "nombre": "Tapa gorro de cobre 2\"", "desc": "Tapa gorro de cobre para soldar de 2 pulgadas, con fondo abombado (calza en cañería de 5,4 cm de diámetro por fuera)", "cant": "2", "uso": "Las dos tapas de la caldera", "paso": "B1, B4", "donde": "Sodimac, Easy, Imperial, gasfiterías", "min": 6000, "max": 12000, "nota": "Llevar el retazo de cañería y probar que entre. Medir con pie de metro qué tan honda es la tapa: debe dar ≈ 3,4 cm."}, {"id": "m02", "n": 2, "pri": 1, "sis": "CALDERA", "nombre": "Cañería de cobre 2\"", "desc": "Retazo de 20 cm de cañería de cobre de 2 pulgadas tipo L (5,4 cm de diámetro por fuera, ≈ 5,04 cm por dentro, pared de 0,18 cm)", "cant": "1 retazo de 20 cm", "uso": "Caldera de 15 cm + 5 cm para la culata y pruebas", "paso": "B1", "donde": "Gasfíter, chatarrería (venden cobre por kilo), Marketplace", "min": 3000, "max": 10000, "nota": "Sin abolladuras y bien redonda."}, {"id": "m03", "n": 3, "pri": 1, "sis": "MOTOR", "nombre": "Platina de bronce (o latón)", "desc": "Barra plana de bronce o latón de 1/4\" x 1\" (0,64 x 2,54 cm), trozo de 15 cm", "cant": "1", "uso": "Bloque de lumbreras (4,4 cm) + bloque del cilindro (3 cm) + manivela (2,2 cm)", "paso": "A2, A3, A5", "donde": "Casas de metales no ferrosos (bronce/cobre), Mercado Libre", "min": 4000, "max": 9000, "nota": "Es la pieza más difícil de encontrar. Que las caras vengan planas, sin rayas hondas."}, {"id": "m04", "n": 4, "pri": 1, "sis": "MOTOR", "nombre": "O-ring de Viton", "desc": "O-ring de Viton (FKM) 10 x 2 mm (1 cm por dentro, 0,2 cm de grosor)", "cant": "3", "uso": "Sello del pistón (1 + 2 de repuesto)", "paso": "A4", "donde": "Casa de retenes y sellos hidráulicos", "min": 1500, "max": 4500, "nota": "Pedir Viton, no nitrilo (el normal se derrite con el vapor)."}, {"id": "m05", "n": 5, "pri": 1, "sis": "MOTOR", "nombre": "Rodamientos MR104ZZ", "desc": "Rodamiento MR104ZZ (0,4 cm por dentro, 1 cm por fuera, 0,4 cm de ancho)", "cant": "8", "uso": "4 de las ruedas + 2 del cigüeñal + 2 de repuesto", "paso": "A1, C2", "donde": "Mercado Libre, casas de rodamientos, tiendas de aeromodelismo/RC", "min": 4000, "max": 9000, "nota": ""}, {"id": "m06", "n": 6, "pri": 1, "sis": "MOTOR", "nombre": "Acero plata de 4 mm", "desc": "Varilla de acero plata (eje calibrado) de 0,4 cm de diámetro, 50 cm de largo", "cant": "1", "uso": "Ejes (2 de 15,2 cm) + cigüeñal (3,9 cm) + pasador (1,7 cm)", "paso": "A5, C3", "donde": "Mercado Libre (\"eje 4 mm\"), ferretería industrial", "min": 2000, "max": 5000, "nota": "Probar en la tienda que entre justo en el rodamiento MR104ZZ."}, {"id": "m07", "n": 7, "pri": 1, "sis": "CALDERA", "nombre": "Coplas de bronce 1/4\"", "desc": "Copla de bronce hilo interior-hilo interior de 1/4\" NPT (por fuera máximo 1,8 cm)", "cant": "3", "uso": "Donde se atornillan válvula, manómetro y válvula de seguridad", "paso": "B3", "donde": "Ferretería de gasfitería, Sodimac", "min": 2400, "max": 6000, "nota": "Comprar TODO lo de 1/4\" en la misma tienda y probar ahí que las roscas calcen."}, {"id": "m08", "n": 8, "pri": 1, "sis": "CALDERA", "nombre": "Llave de paso mini 1/4\"", "desc": "Válvula de bola mini de bronce 1/4\" NPT, hilo exterior-hilo interior", "cant": "1", "uso": "Abrir y cerrar el vapor", "paso": "E3", "donde": "Mercado Libre, ferreterías", "min": 3000, "max": 7000, "nota": "Si solo hay hilo interior por ambos lados, comprar además un niple corto de 1/4\"."}, {"id": "m09", "n": 9, "pri": 1, "sis": "CALDERA", "nombre": "Manómetro", "desc": "Manómetro seco 0 a 4 bar (0 a 60 psi), esfera de 4 cm, conexión abajo de 1/4\" NPT", "cant": "1", "uso": "Ver la presión", "paso": "E3", "donde": "Mercado Libre, ferreterías industriales", "min": 4000, "max": 9000, "nota": "Seco, no de glicerina (aguanta mejor el calor)."}, {"id": "m10", "n": 10, "pri": 1, "sis": "CALDERA", "nombre": "Tapones de bronce 1/4\"", "desc": "Tapón macho de bronce 1/4\" NPT con cabeza hexagonal (macizo)", "cant": "3", "uso": "Salida de vapor, válvula de seguridad y 1 de repuesto", "paso": "B7-B9", "donde": "Ferretería de gasfitería", "min": 1500, "max": 3000, "nota": ""}, {"id": "m11", "n": 11, "pri": 1, "sis": "SOLDADURA", "nombre": "Soldadura de plata 5 %", "desc": "Varilla de soldadura de plata al 5 %", "cant": "2 varillas", "uso": "Todas las uniones de cobre y bronce", "paso": "A3, B5", "donde": "Ferretería, casa de refrigeración", "min": 5000, "max": 5000, "nota": ""}, {"id": "m12", "n": 12, "pri": 1, "sis": "SOLDADURA", "nombre": "Fundente para plata", "desc": "Pasta fundente para soldadura de plata", "cant": "1 frasco chico", "uso": "Solo en las uniones con bronce o latón", "paso": "A2, A3, B5", "donde": "Casa de refrigeración, ferretería", "min": 3000, "max": 6000, "nota": "Cobre con cobre no lleva."}, {"id": "m13", "n": 13, "pri": 1, "sis": "SOLDADURA", "nombre": "Ladrillos refractarios", "desc": "Ladrillo refractario (el de estufas y chimeneas)", "cant": "4", "uso": "Encerrar la caldera al soldar para que el soplete alcance a calentarla", "paso": "B5", "donde": "Sodimac, Easy, barracas", "min": 6000, "max": 12000, "nota": "Sin esto el soplete de propano no calienta lo suficiente una cañería de 2\"."}, {"id": "m14", "n": 14, "pri": 2, "sis": "MOTOR", "nombre": "Cañería de cobre 1/2\"", "desc": "Retazo de 15 cm de cañería de cobre de 1/2\" tipo L (1,59 cm por fuera, ≈ 1,38 cm por dentro)", "cant": "1 retazo de 15 cm", "uso": "Cilindro de 3,1 cm (+ repuesto)", "paso": "A3", "donde": "Gasfíter, chatarrería", "min": 500, "max": 2000, "nota": "Sin abolladuras: el pistón corre adentro."}, {"id": "m15", "n": 15, "pri": 2, "sis": "MOTOR", "nombre": "Tuerca de unión M5", "desc": "Tuerca larga (de unión) M5 de 1,5 cm de largo", "cant": "2", "uso": "Cabeza de la biela (1 + repuesto)", "paso": "A4", "donde": "Casa de pernos", "min": 400, "max": 1200, "nota": ""}, {"id": "m16", "n": 16, "pri": 2, "sis": "MOTOR", "nombre": "Golillas anchas M5", "desc": "Golilla plana ancha M5 de 1,5 cm por fuera (DIN 9021)", "cant": "3", "uso": "Las 2 caras del pistón + 1", "paso": "A4", "donde": "Casa de pernos", "min": 150, "max": 450, "nota": "Se liman a 1,34 cm."}, {"id": "m17", "n": 17, "pri": 2, "sis": "MOTOR", "nombre": "Golillas normales M5", "desc": "Golilla plana M5 de 1 cm por fuera y 0,1 cm de grosor (DIN 125)", "cant": "4", "uso": "Separadores del o-ring (3) + 1", "paso": "A4", "donde": "Casa de pernos", "min": 100, "max": 400, "nota": ""}, {"id": "m18", "n": 18, "pri": 2, "sis": "MOTOR", "nombre": "Golillas M4 (polea)", "desc": "Golillas M4: 2 anchas de 1,2 cm por fuera (DIN 9021) + 3 normales de 0,9 cm (DIN 125)", "cant": "5", "uso": "Polea chica del motor", "paso": "A6", "donde": "Casa de pernos", "min": 300, "max": 800, "nota": ""}, {"id": "m19", "n": 19, "pri": 2, "sis": "MOTOR", "nombre": "Varilla con hilo M5", "desc": "Varilla roscada M5, trozo de 10 cm", "cant": "1", "uso": "Vástago de 4,2 cm", "paso": "A4", "donde": "Casa de pernos", "min": 500, "max": 1500, "nota": ""}, {"id": "m20", "n": 20, "pri": 2, "sis": "MOTOR", "nombre": "Tuercas M5", "desc": "Tuerca hexagonal M5", "cant": "4", "uso": "Pistón (2) + contratuerca (1) + 1", "paso": "A4", "donde": "Casa de pernos", "min": 200, "max": 500, "nota": ""}, {"id": "m21", "n": 21, "pri": 2, "sis": "MOTOR", "nombre": "Varilla con hilo M3", "desc": "Varilla roscada M3, trozo de 5 cm (o perno M3 x 4 cm, se le corta la cabeza)", "cant": "1", "uso": "Pivote del cilindro (3 cm)", "paso": "A7", "donde": "Casa de pernos", "min": 200, "max": 600, "nota": ""}, {"id": "m22", "n": 22, "pri": 2, "sis": "MOTOR", "nombre": "Resorte del pivote", "desc": "Resorte de compresión de 0,6 a 0,8 cm por fuera, que pase por un perno M3, de 1 a 1,5 cm de largo", "cant": "2", "uso": "Aprieta el cilindro contra la columna", "paso": "A7", "donde": "Kit de resortes surtidos, ferretería", "min": 300, "max": 2000, "nota": ""}, {"id": "m23", "n": 23, "pri": 2, "sis": "MOTOR", "nombre": "Prisioneros M3", "desc": "Prisionero allen M3 de 0,5 cm de largo", "cant": "2", "uso": "Fijar la manivela al cigüeñal", "paso": "A5", "donde": "Casa de pernos", "min": 200, "max": 600, "nota": ""}, {"id": "m24", "n": 24, "pri": 2, "sis": "MOTOR", "nombre": "Tornillos avellanados M3", "desc": "Tornillo M3 de 1,2 cm cabeza avellanada (plana) + tuerca", "cant": "2", "uso": "Bloque de lumbreras a la columna", "paso": "A2", "donde": "Casa de pernos", "min": 200, "max": 600, "nota": ""}, {"id": "m25", "n": 25, "pri": 2, "sis": "MOTOR", "nombre": "Platina de aluminio", "desc": "Platina de aluminio de 4 cm de ancho y 0,3 cm de grosor (tira de 1 m o retazo de 15 cm)", "cant": "1", "uso": "Columna (10,2 cm) + refuerzo (2 cm)", "paso": "A1", "donde": "Sodimac, Easy, ferreterías", "min": 2500, "max": 6000, "nota": ""}, {"id": "m26", "n": 26, "pri": 2, "sis": "MOTOR", "nombre": "JB Weld", "desc": "Pegamento epóxico JB Weld original (2 tubos, aguanta 280 °C)", "cant": "1", "uso": "Rodamientos, volante, polea y pasador", "paso": "A1, A5, A6", "donde": "Sodimac, Easy, ferreterías", "min": 6000, "max": 10000, "nota": ""}, {"id": "m27", "n": 27, "pri": 2, "sis": "MOTOR", "nombre": "Manguera de silicona", "desc": "Manguera de silicona de 0,6 cm por dentro, 30 cm", "cant": "1", "uso": "Unión del tubo de vapor (4 cm) y pruebas soplando", "paso": "A8, E4", "donde": "Mercado Libre, tiendas de acuario o de cerveza artesanal", "min": 1500, "max": 3500, "nota": "De silicona (aguanta 200 °C), no de PVC."}, {"id": "m28", "n": 28, "pri": 2, "sis": "MOTOR", "nombre": "Cañería de cobre 1/4\"", "desc": "Cañería flexible de cobre de refrigeración 1/4\" (0,64 cm por fuera), 50 cm", "cant": "1", "uso": "Tubo de vapor (22 cm) + salida (6 cm) + llenado del quemador (1 cm)", "paso": "A2, B9", "donde": "Casa de repuestos de refrigeración", "min": 1000, "max": 3000, "nota": ""}, {"id": "m29", "n": 29, "pri": 2, "sis": "HOGAR", "nombre": "Cañería de cobre 3/8\"", "desc": "Retazo de 10 cm de cañería de cobre 3/8\" (0,95 cm por fuera)", "cant": "1", "uso": "4 tubitos de mecha de 1,3 cm", "paso": "D3", "donde": "Casa de refrigeración", "min": 500, "max": 2000, "nota": "Pedir un sobrante."}, {"id": "m30", "n": 30, "pri": 2, "sis": "HOGAR", "nombre": "Mecha de fibra de vidrio", "desc": "Cordón de fibra de vidrio de 0,8 cm (el de la puerta de las estufas a leña), 50 cm", "cant": "1", "uso": "4 mechas de 4 cm + relleno de la bandeja", "paso": "D3", "donde": "Tiendas de estufas, Mercado Libre", "min": 2000, "max": 4000, "nota": "Algodón sirve para probar, pero se quema."}, {"id": "m31", "n": 31, "pri": 2, "sis": "CALDERA", "nombre": "Niple de bronce 1/4\"", "desc": "Niple de bronce 1/4\" NPT de 3,8 cm de largo (1 1/2\")", "cant": "1", "uso": "Separar el manómetro de la caldera", "paso": "E3", "donde": "Ferretería de gasfitería", "min": 800, "max": 1500, "nota": ""}, {"id": "m32", "n": 32, "pri": 2, "sis": "CALDERA", "nombre": "Válvula de aire 1/4\"", "desc": "Válvula de aire (como la de neumático) con hilo macho 1/4\" NPT, la de estanque de compresor", "cant": "1", "uso": "Inflar con bombín en las pruebas", "paso": "B7, B8", "donde": "Mercado Libre, casas de compresores", "min": 1500, "max": 3000, "nota": "Solo para pruebas."}, {"id": "m33", "n": 33, "pri": 2, "sis": "CALDERA", "nombre": "Bolita de acero", "desc": "Bolita de acero de 0,4 cm (de rodamiento)", "cant": "2", "uso": "Válvula de seguridad (1 + repuesto)", "paso": "B8", "donde": "Mercado Libre, bicicletería, casa de rodamientos", "min": 500, "max": 1500, "nota": ""}, {"id": "m34", "n": 34, "pri": 2, "sis": "CALDERA", "nombre": "Resorte chico", "desc": "Resorte de lápiz pasta (máximo 0,4 cm por fuera, 0,8 a 1,2 cm de largo)", "cant": "2", "uso": "Válvula de seguridad", "paso": "B8", "donde": "Lápiz pasta / kit de resortes", "min": 0, "max": 2000, "nota": "Debe entrar suelto en un agujero de 0,42 cm."}, {"id": "m35", "n": 35, "pri": 2, "sis": "CALDERA", "nombre": "Prisioneros M5", "desc": "Prisionero allen M5 de 0,6 cm de largo", "cant": "2", "uso": "Regular la válvula de seguridad", "paso": "B8", "donde": "Casa de pernos", "min": 200, "max": 600, "nota": ""}, {"id": "m36", "n": 36, "pri": 2, "sis": "CHASIS", "nombre": "Plancha de aluminio", "desc": "Plancha de aluminio de 0,2 cm de grosor, cortada a 30 x 12 cm exactos", "cant": "1", "uso": "Chasis", "paso": "C1", "donde": "Hojalatería (que la corten ahí)", "min": 3000, "max": 8000, "nota": "Pedir el corte a escuadra."}, {"id": "m37", "n": 37, "pri": 3, "sis": "CHASIS", "nombre": "O-rings neumáticos", "desc": "O-ring de goma (nitrilo) 52 x 3 mm (5,2 cm por dentro, 0,3 cm de grosor)", "cant": "5", "uso": "Neumáticos (4 + 1)", "paso": "C5", "donde": "Casa de retenes", "min": 1500, "max": 4000, "nota": "Se compran junto con los de Viton."}, {"id": "m38", "n": 38, "pri": 3, "sis": "CHASIS", "nombre": "O-ring correa", "desc": "O-ring de goma 55 x 2 mm (5,5 cm por dentro, 0,2 cm de grosor)", "cant": "2", "uso": "Correa (1 + 1)", "paso": "E1", "donde": "Casa de retenes", "min": 600, "max": 1500, "nota": "Si no hay, 54 x 2 o 56 x 2."}, {"id": "m39", "n": 39, "pri": 3, "sis": "MOTOR", "nombre": "Golillas carroceras", "desc": "Golilla carrocera 5/16\" x 1 1/2\" (3,8 cm por fuera, ≈ 0,2 cm de grosor)", "cant": "5", "uso": "Volante", "paso": "A6", "donde": "Ferretería", "min": 500, "max": 1500, "nota": "Si son más delgadas, usar 6."}, {"id": "m40", "n": 40, "pri": 3, "sis": "MOTOR", "nombre": "Escuadras", "desc": "Escuadra metálica en L de 2 x 2 cm con agujeros", "cant": "2", "uso": "Pie de la columna", "paso": "E1", "donde": "Ferretería", "min": 400, "max": 1200, "nota": "Máximo 2 cm de alto (si es más alta, cortarla)."}, {"id": "m41", "n": 41, "pri": 3, "sis": "CHASIS", "nombre": "Tornillería M3", "desc": "6 tornillos M3 de 0,6 cm + 15 de 1 cm + 10 de 1,6 cm + 25 tuercas M3 + 20 golillas M3", "cant": "1 lote", "uso": "Ruedas, polea, bloques, hogar, columna, refuerzo y tope", "paso": "C4, D2, E1", "donde": "Casa de pernos", "min": 2000, "max": 4000, "nota": ""}, {"id": "m42", "n": 42, "pri": 3, "sis": "MOTOR", "nombre": "Traba roscas", "desc": "Loctite azul 243 (o una gota de JB Weld)", "cant": "1", "uso": "Tuercas del pistón", "paso": "A4", "donde": "Ferretería", "min": 0, "max": 6000, "nota": "Opcional si usan JB Weld."}, {"id": "m43", "n": 43, "pri": 3, "sis": "CHASIS", "nombre": "Filamento", "desc": "Filamento PETG de 1,75 mm, unos 70 g", "cant": "70 g", "uso": "Ruedas, polea grande y soportes de rodamientos", "paso": "C2", "donde": "El conocido de la impresora", "min": 0, "max": 4000, "nota": "PLA también sirve."}, {"id": "m44", "n": 44, "pri": 3, "sis": "SOLDADURA", "nombre": "Huincha de teflón", "desc": "Huincha de teflón para hilos", "cant": "1", "uso": "Sellar todas las roscas", "paso": "B7, E3", "donde": "Ferretería", "min": 500, "max": 1000, "nota": ""}, {"id": "m45", "n": 45, "pri": 3, "sis": "HOGAR", "nombre": "Alambre negro", "desc": "Alambre negro de amarre de 0,1 cm, 50 cm", "cant": "1", "uso": "Amarrar la caldera y piezas al soldar", "paso": "B4, E2", "donde": "Ferretería", "min": 200, "max": 500, "nota": "No galvanizado."}, {"id": "m46", "n": 46, "pri": 3, "sis": "HOGAR", "nombre": "Tarro de hojalata", "desc": "Tarro metálico de leche en polvo o 2 tarros grandes de conserva (no galvanizados)", "cant": "1", "uso": "Paredes del hogar y bandeja del quemador", "paso": "D1", "donde": "Casa", "min": 0, "max": 0, "nota": ""}, {"id": "m47", "n": 47, "pri": 3, "sis": "HOGAR", "nombre": "Corcho", "desc": "Corcho chico o tapón de goma para un tubo de 0,64 cm", "cant": "1", "uso": "Tapar el llenado del quemador", "paso": "D3", "donde": "Casa", "min": 0, "max": 500, "nota": ""}, {"id": "m48", "n": 48, "pri": 3, "sis": "OPERACIÓN", "nombre": "Alcohol de quemar", "desc": "Alcohol de quemar, 1 litro", "cant": "1", "uso": "12 mL (1,2 cm³) por carrera", "paso": "F", "donde": "Supermercado", "min": 2000, "max": 3500, "nota": ""}, {"id": "m49", "n": 49, "pri": 3, "sis": "OPERACIÓN", "nombre": "Jeringas", "desc": "Jeringa de 60 mL (agua) + jeringa de 20 mL (alcohol)", "cant": "2", "uso": "Cargar agua y alcohol", "paso": "F", "donde": "Farmacia", "min": 1000, "max": 2500, "nota": "Marcar cuál es la del alcohol."}, {"id": "m50", "n": 50, "pri": 3, "sis": "OPERACIÓN", "nombre": "Lijas al agua", "desc": "Lija al agua grano 240, 400, 800 y 1200 (1 de cada una)", "cant": "4", "uso": "Dejar planas las caras del motor y limpiar soldaduras", "paso": "A2, A3, B4", "donde": "Ferretería", "min": 1500, "max": 3000, "nota": ""}, {"id": "m51", "n": 51, "pri": 3, "sis": "OPERACIÓN", "nombre": "Ácido cítrico", "desc": "Ácido cítrico en polvo (o vinagre con sal)", "cant": "1", "uso": "Limpiar el cobre después de soldar", "paso": "B6", "donde": "Supermercado", "min": 1000, "max": 2000, "nota": ""}, {"id": "m52", "n": 52, "pri": 3, "sis": "OPERACIÓN", "nombre": "Aceite", "desc": "Aceite de auto (unas gotas)", "cant": "1", "uso": "Lubricar el cilindro y el pivote", "paso": "A8, F", "donde": "Casa", "min": 0, "max": 0, "nota": ""}, {"id": "m53", "n": 53, "pri": 3, "sis": "OPERACIÓN", "nombre": "Pegamento en barra y plumón", "desc": "Pegamento en barra + plumón permanente", "cant": "1", "uso": "Pegar las plantillas y marcar", "paso": "A1, B2", "donde": "Casa / librería", "min": 0, "max": 1500, "nota": ""}], "cortes": [{"id": "c01", "pieza": "Casco de la caldera", "de": "Cañería Cu 2\" tipo L", "medida": "15,0 cm (puntas a escuadra)", "cant": 1, "como": "Sierra de arco + lima; marcar con tira de papel", "paso": "B1"}, {"id": "c02", "pieza": "Culata del cilindro", "de": "Sobrante de la cañería de 2\" calentado y aplanado", "medida": "1,7 x 1,7 cm", "cant": 1, "como": "Tijera hojalatera + lima", "paso": "A3"}, {"id": "c03", "pieza": "Cilindro", "de": "Cañería Cu 1/2\" tipo L", "medida": "3,1 cm", "cant": 1, "como": "Cortatubo o sierra + lima a escuadra", "paso": "A3"}, {"id": "c04", "pieza": "Bloque de lumbreras", "de": "Platina de bronce 0,64 x 2,54 cm", "medida": "4,4 x 2,54 cm", "cant": 1, "como": "Sierra de arco + lima", "paso": "A2"}, {"id": "c05", "pieza": "Bloque del cilindro", "de": "Platina de bronce 0,64 x 2,54 cm", "medida": "3,0 x 2,0 cm", "cant": 1, "como": "Sierra + lima (rebajar el ancho de 25,4 a 20)", "paso": "A3"}, {"id": "c06", "pieza": "Manivela", "de": "Sobrante de la platina de bronce", "medida": "2,2 x 1,2 cm, puntas redondeadas", "cant": 1, "como": "Sierra + lima", "paso": "A5"}, {"id": "c07", "pieza": "Columna", "de": "Platina de aluminio 4 x 0,3 cm", "medida": "10,2 cm", "cant": 1, "como": "Sierra de arco", "paso": "A1"}, {"id": "c08", "pieza": "Refuerzo", "de": "Platina de aluminio 4 x 0,3 cm", "medida": "2,0 cm", "cant": 1, "como": "Sierra de arco", "paso": "A1"}, {"id": "c09", "pieza": "Cigüeñal", "de": "Acero plata 0,4 cm", "medida": "3,9 cm", "cant": 1, "como": "Sierra + lima, achaflanar", "paso": "A5"}, {"id": "c10", "pieza": "Pasador de manivela", "de": "Acero plata 0,4 cm", "medida": "1,7 cm", "cant": 1, "como": "Sierra + lima", "paso": "A5"}, {"id": "c11", "pieza": "Ejes", "de": "Acero plata 0,4 cm", "medida": "15,2 cm", "cant": 2, "como": "Sierra + lima, achaflanar", "paso": "C3"}, {"id": "c12", "pieza": "Vástago", "de": "Varilla roscada M5", "medida": "4,2 cm", "cant": 1, "como": "Sierra; repasar la rosca con una tuerca", "paso": "A4"}, {"id": "c13", "pieza": "Espárrago del pivote", "de": "Varilla roscada M3", "medida": "3,0 cm", "cant": 1, "como": "Sierra; repasar la rosca", "paso": "A7"}, {"id": "c14", "pieza": "Tubo de vapor (lado motor)", "de": "Cañería Cu 1/4\"", "medida": "22 cm (se recorta al final)", "cant": 1, "como": "Cortatubo", "paso": "A2"}, {"id": "c15", "pieza": "Tubo de salida (lado caldera)", "de": "Cañería Cu 1/4\"", "medida": "6 cm", "cant": 1, "como": "Cortatubo", "paso": "B9"}, {"id": "c16", "pieza": "Tubo de llenado del quemador", "de": "Cañería Cu 1/4\"", "medida": "1 cm", "cant": 1, "como": "Cortatubo", "paso": "D3"}, {"id": "c17", "pieza": "Tubos de mecha", "de": "Cañería Cu 3/8\"", "medida": "1,3 cm", "cant": 4, "como": "Cortatubo", "paso": "D3"}, {"id": "c18", "pieza": "Unión de vapor", "de": "Manguera de silicona 0,6 cm", "medida": "4 cm", "cant": 1, "como": "Cuchillo cartonero", "paso": "E4"}, {"id": "c19", "pieza": "Mechas", "de": "Cordón de fibra de vidrio 0,8 cm", "medida": "4 cm (4 mechas) + 30 cm de relleno", "cant": 5, "como": "Tijera", "paso": "D3"}, {"id": "c20", "pieza": "Chasis", "de": "Plancha de aluminio 0,2 cm", "medida": "30 x 12 cm", "cant": 1, "como": "Hojalatería", "paso": "C1"}, {"id": "c21", "pieza": "Paredes laterales del hogar", "de": "Hojalata", "medida": "14,6 x 6 cm + pestañas de 0,8 cm (plantilla 4)", "cant": 2, "como": "Tijera hojalatera", "paso": "D1"}, {"id": "c22", "pieza": "Paredes extremas del hogar", "de": "Hojalata", "medida": "7,2 x 6,4 cm con medio círculo + pestaña de 0,8 cm (plantilla 5)", "cant": 2, "como": "Tijera hojalatera", "paso": "D1"}, {"id": "c23", "pieza": "Bandeja del quemador", "de": "Hojalata", "medida": "12,8 x 6,8 cm desplegada (plantilla 6)", "cant": 1, "como": "Tijera hojalatera", "paso": "D3"}, {"id": "c24", "pieza": "Tapa del quemador", "de": "Hojalata", "medida": "10 x 4 cm", "cant": 1, "como": "Tijera hojalatera", "paso": "D3"}], "herramientas": [{"id": "h01", "nombre": "Taladro (ideal: taladro de banco)", "para": "Todos los agujeros", "alt": "Taladro de mano con mucho cuidado de mantenerlo perpendicular; pedir prestado uno de banco en la U o un taller"}, {"id": "h02", "nombre": "Brocas HSS: 1,5 · 2 · 2,5 · 3,2 · 3,5 · 4 · 4,2 · 6 · 6,5 · 8 · 9,5 · 10 mm", "para": "Ver cada paso", "alt": "Broca escalonada (4-20 mm) para 8, 9,5 y 10 en plancha delgada"}, {"id": "h03", "nombre": "Machos M3 y M5 + porta machos", "para": "Roscas del pivote, manivela y válvula de seguridad", "alt": "Kit de machos básico (M3-M12)"}, {"id": "h04", "nombre": "Pie de metro (calibre)", "para": "Medir TODO: diámetro del cilindro, pistón, cortes", "alt": "Imprescindible. Digital o análogo"}, {"id": "h05", "nombre": "Granete y martillo", "para": "Marcar centros antes de perforar", "alt": "Un clavo afilado"}, {"id": "h06", "nombre": "Prensa de banco", "para": "Sujetar piezas, doblar hojalata", "alt": "Prensas en C (sargentos)"}, {"id": "h07", "nombre": "Sierra de arco (hoja de 32 dientes)", "para": "Cortar tubos, platinas y varillas", "alt": ""}, {"id": "h08", "nombre": "Limas: plana, media caña y redonda chica", "para": "Escuadrar, rebabas, ranuras", "alt": ""}, {"id": "h09", "nombre": "Tijera hojalatera", "para": "Cortar hojalata", "alt": ""}, {"id": "h10", "nombre": "Cortatubos chico (3-30 mm)", "para": "Tubos 1/4\", 3/8\" y 1/2\"", "alt": "Sierra fina + lima"}, {"id": "h11", "nombre": "Soplete de propano", "para": "Soldadura de plata", "alt": "Pedir prestado"}, {"id": "h12", "nombre": "Cautín o soplete + estaño y pasta", "para": "Soldar la bandeja de hojalata", "alt": "Pedir prestado"}, {"id": "h13", "nombre": "Vidrio plano o espejo (≥ 15 x 15 cm)", "para": "Base para lapear con lija", "alt": "Cerámica de piso lisa"}, {"id": "h14", "nombre": "Bombín de pie con manómetro", "para": "Prueba hidrostática y calibrar la válvula de seguridad", "alt": "Compresor con regulador"}, {"id": "h15", "nombre": "Termómetro de cocina (hasta 110 °C)", "para": "Agua a 90 °C", "alt": "Hervidor: el agua recién hervida y esperar 2 min ≈ 90 °C"}, {"id": "h16", "nombre": "Llaves allen 1,5 y 2,5 mm, alicate, destornilladores", "para": "Prisioneros y montaje", "alt": ""}, {"id": "h17", "nombre": "Guantes de cuero, lentes de seguridad, extintor o balde con agua", "para": "Seguridad al soldar y al probar", "alt": "Imprescindible"}], "pasos": [{"cod": "A1", "titulo": "Columna y refuerzo (aluminio)", "etapa": "A · Motor oscilante"}, {"cod": "A2", "titulo": "Bloque de lumbreras (latón) y tubo de vapor", "etapa": "A · Motor oscilante"}, {"cod": "A3", "titulo": "Cilindro con bloque y culata", "etapa": "A · Motor oscilante"}, {"cod": "A4", "titulo": "Pistón y biela", "etapa": "A · Motor oscilante"}, {"cod": "A5", "titulo": "Manivela, cigüeñal y pasador", "etapa": "A · Motor oscilante"}, {"cod": "A6", "titulo": "Volante y polea motriz", "etapa": "A · Motor oscilante"}, {"cod": "A7", "titulo": "Montaje del cilindro", "etapa": "A · Motor oscilante"}, {"cod": "A8", "titulo": "Prueba del motor con aire", "etapa": "A · Motor oscilante"}, {"cod": "B1", "titulo": "Cortar y preparar el tubo", "etapa": "B · Caldera"}, {"cod": "B2", "titulo": "Agujeros de las coplas", "etapa": "B · Caldera"}, {"cod": "B3", "titulo": "Ajustar las coplas a la curva del tubo", "etapa": "B · Caldera"}, {"cod": "B4", "titulo": "Limpieza y armado para soldar", "etapa": "B · Caldera"}, {"cod": "B5", "titulo": "Soldadura con plata", "etapa": "B · Caldera"}, {"cod": "B6", "titulo": "Limpieza", "etapa": "B · Caldera"}, {"cod": "B7", "titulo": "Prueba hidrostática a 2 bar", "etapa": "B · Caldera"}, {"cod": "B8", "titulo": "Válvula de seguridad", "etapa": "B · Caldera"}, {"cod": "B9", "titulo": "Salida de vapor", "etapa": "B · Caldera"}, {"cod": "C1", "titulo": "Plancha del chasis", "etapa": "C · Chasis, ejes y ruedas"}, {"cod": "C2", "titulo": "Piezas impresas", "etapa": "C · Chasis, ejes y ruedas"}, {"cod": "C3", "titulo": "Ejes", "etapa": "C · Chasis, ejes y ruedas"}, {"cod": "C4", "titulo": "Armado de ejes y bloques", "etapa": "C · Chasis, ejes y ruedas"}, {"cod": "C5", "titulo": "Neumáticos", "etapa": "C · Chasis, ejes y ruedas"}, {"cod": "D1", "titulo": "Hojalata", "etapa": "D · Hogar y quemador"}, {"cod": "D2", "titulo": "Hogar", "etapa": "D · Hogar y quemador"}, {"cod": "D3", "titulo": "Quemador de 4 mechas", "etapa": "D · Hogar y quemador"}, {"cod": "E1", "titulo": "Motor sobre el chasis y correa", "etapa": "E · Montaje final"}, {"cod": "E2", "titulo": "Caldera", "etapa": "E · Montaje final"}, {"cod": "E3", "titulo": "Accesorios", "etapa": "E · Montaje final"}, {"cod": "E4", "titulo": "Línea de vapor", "etapa": "E · Montaje final"}, {"cod": "E5", "titulo": "Revisión antes del fuego", "etapa": "E · Montaje final"}, {"cod": "F", "titulo": "Primera prueba con vapor y operación", "etapa": "F · Primera prueba con vapor"}]};
+const MIEMBROS = ["Diego", "Renato", "Cristofer", "Ilian"];
+const PRI = { 1: "Difícil e importante", 2: "Importante, fácil de hallar", 3: "Fácil / de la casa" };
+const SISTEMAS = ["CALDERA", "MOTOR", "CHASIS", "HOGAR", "SOLDADURA", "OPERACIÓN", "OTRO"];
+
+/* ---------- utilidades ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v; else if (k === "text") e.textContent = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+};
+const pesos = n => "$" + Math.round(n || 0).toLocaleString("es-CL");
+const ls = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+const hace = t => {
+  if (!t) return "";
+  const s = (Date.now() - t) / 1000;
+  if (s < 60) return "recién"; if (s < 3600) return `hace ${Math.floor(s / 60)} min`;
+  if (s < 86400) return `hace ${Math.floor(s / 3600)} h`; return `hace ${Math.floor(s / 86400)} d`;
+};
+const linkSeguro = u => { u = (u || "").trim(); if (!u) return ""; if (!/^https?:\/\//i.test(u)) u = "https://" + u; try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ""; } catch { return ""; } };
+const toast = msg => { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2200); };
+const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+/* ---------- estado compartido ---------- */
+let S = {};                 // id -> estado guardado
+let yo = ls.get("auto-vapor-yo") || "";
+const pendiente = new Map(); // id -> timeout de guardado
+let back = null;
+
+function st(id) { return S[id] || {}; }
+function guardar(id, cambios, inmediato) {
+  S[id] = { ...st(id), ...cambios, por: yo || "Alguien", at: Date.now() };
+  clearTimeout(pendiente.get(id));
+  const go = () => { pendiente.delete(id); escribir(id); };
+  if (inmediato) go(); else pendiente.set(id, setTimeout(go, 700));
+  refrescar(id);
+}
+const cola = new Map();
+async function escribir(id) {
+  const prev = cola.get(id) || Promise.resolve();
+  const p = prev.then(() => back ? back.write(id, S[id]) : null).catch(e => { estadoSync("bad", "No se pudo guardar. Revisa la conexión."); console.warn(e); });
+  cola.set(id, p);
+}
+async function borrar(id) {
+  delete S[id];
+  try { if (back) await back.remove(id); } catch (e) { estadoSync("bad", "No se pudo borrar."); }
+  render();
+}
+function recibir(todo) {
+  for (const id of new Set([...Object.keys(S), ...Object.keys(todo)])) {
+    if (pendiente.has(id)) continue; // no pisar lo que estoy escribiendo
+    if (todo[id]) S[id] = todo[id]; else delete S[id];
+  }
+  const enMateriales = document.activeElement && $("#materiales").contains(document.activeElement);
+  const nuevos = Object.keys(S).filter(id => id.startsWith("x-")).some(id => !filas.has(id)) || [...filas.keys()].some(id => id.startsWith("x-") && !S[id]);
+  if (enMateriales && !nuevos) { for (const f of filas.values()) f.actualizar(); renderResumen(); renderCortes(); renderHerramientas(); renderPasos(); }
+  else render();
+}
+
+/* Tres formas de guardar: base de la página en Claude, API de Vercel, o solo este navegador */
+async function conectar() {
+  if (window.claude && typeof window.claude.use === "function") {
+    try {
+      const db = await window.claude.use("db");
+      if (db) {
+        const col = db.collection("estado");
+        back = { write: (id, d) => col.doc(id).set(d), remove: id => col.doc(id).delete() };
+        col.onSnapshot(snap => { const m = {}; snap.docs.forEach(d => { if (d.exists) m[d.id] = d.data(); }); estadoSync("on", "Guardado para todo el grupo"); recibir(m); },
+          e => estadoSync("bad", e.code === "invalid_argument" ? "Solo lectura: pide acceso para editar." : "Se cortó la conexión. Recarga la página."));
+        return;
+      }
+    } catch {}
+  }
+  const clave = () => ls.get("auto-vapor-clave") || "";
+  const api = async (method, body, q = "") => {
+    const r = await fetch("/api/estado" + q, { method, headers: { "Content-Type": "application/json", "x-clave": clave() }, body: body ? JSON.stringify(body) : undefined });
+    if (r.status === 401) { pedirClave(); throw new Error("clave"); }
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
+    return r.json();
+  };
+  try {
+    const m = await api("GET");
+    back = { write: (id, d) => api("POST", { id, data: d }), remove: id => api("DELETE", null, "?id=" + encodeURIComponent(id)) };
+    estadoSync("on", "Guardado para todo el grupo"); recibir(m);
+    const tirar = async () => { if (document.hidden) return; try { const m = await api("GET"); estadoSync("on", "Guardado para todo el grupo · " + new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })); recibir(m); } catch (e) { if (e.message !== "clave") estadoSync("warn", "Sin conexión, reintentando…"); } };
+    setInterval(tirar, 8000); document.addEventListener("visibilitychange", tirar);
+    return;
+  } catch (e) {
+    if (e.message === "clave") return;
+    if (e.message === "sin_base") { aviso("<b>Falta conectar la base de datos en Vercel.</b> Sigue el paso 3 del archivo LEEME (Storage → Upstash Redis). Mientras tanto lo que marques queda solo en este navegador."); }
+  }
+  // Solo en este navegador
+  let local = {}; try { local = JSON.parse(ls.get("auto-vapor-estado") || "{}"); } catch {}
+  back = { write: () => ls.set("auto-vapor-estado", JSON.stringify(S)), remove: () => ls.set("auto-vapor-estado", JSON.stringify(S)) };
+  estadoSync("warn", "Guardado solo en este navegador");
+  if (!$("#aviso").innerHTML) aviso("<b>Modo de prueba:</b> lo que marques queda guardado solo en este navegador. Para compartirlo con el grupo, sube la página a Vercel como dice el archivo LEEME.");
+  recibir(local);
+}
+function estadoSync(k, txt) { $("#sync-dot").className = "dot " + k; $("#sync-txt").textContent = txt; }
+function aviso(html) { const a = $("#aviso"); a.innerHTML = html; a.hidden = false; }
+function pedirClave() {
+  aviso('<b>Esta página tiene clave de grupo.</b> <input id="clave-in" type="password" placeholder="Clave" style="padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface)"> <button class="btn mini" id="clave-ok">Entrar</button>');
+  $("#clave-ok").onclick = () => { ls.set("auto-vapor-clave", $("#clave-in").value.trim()); location.reload(); };
+}
+
+/* ---------- materiales ---------- */
+const filtro = { q: "", estado: ls.get("auto-vapor-f") || "todos", sis: "", agrupar: ls.get("auto-vapor-g") || "pri" };
+function materiales() {
+  const base = DATOS.materiales.map(m => ({ ...m, ...ver(m.id, m) }));
+  const extra = Object.entries(S).filter(([id, s]) => id.startsWith("x-") && s.custom).map(([id, s], i) => ({
+    id, n: DATOS.materiales.length + 1 + i, pri: +s.pri || 2, sis: s.sis || "OTRO", custom: true, nombre0: "", desc0: "",
+    nombre: s.nombre || "Material nuevo", desc: s.desc || "", cant: s.cant || "", uso: s.uso || "", paso: "", donde: "", min: 0, max: 0, nota: "" }));
+  return base.concat(extra.sort((a, b) => (st(a.id).creado || 0) - (st(b.id).creado || 0)));
+}
+function ver(id, m) { const s = st(id); return { nombre0: m.nombre, desc0: m.desc, nombre: s.nombre || m.nombre, desc: s.desc || m.desc }; }
+
+const filas = new Map(); // id -> {nodo, actualizar}
+function fichaMaterial(m) {
+  const r = {};
+  const nodo = el("article", { class: "item", id: "m-" + m.id });
+  const boton = el("button", { class: "estado", type: "button", onclick: () => { const ok = !st(m.id).ok; guardar(m.id, { ok, okAt: ok ? Date.now() : null, okPor: ok ? (yo || "Alguien") : null }, true); toast(ok ? "Marcado como conseguido" : "Marcado como pendiente"); } });
+  boton.innerHTML = `<span class="caja">${ICON_OK}</span><span class="t"></span>`;
+  r.estadoTxt = boton.querySelector(".t");
+  r.nombre = el("span", { class: "nombre" });
+  r.mod = el("span", { class: "pill mod", text: "editado" });
+  r.cant = el("span", { class: "pill cant" });
+  r.desc = el("div", { class: "desc" });
+  const id = k => `${k}-${m.id}`;
+  r.precio = el("input", { id: id("precio"), inputmode: "numeric", placeholder: "0", autocomplete: "off" });
+  r.precio.addEventListener("input", () => { const v = r.precio.value.replace(/[^\d]/g, ""); guardar(m.id, { precio: v ? +v : null }); });
+  r.link = el("input", { id: id("link"), type: "url", placeholder: "Pega el link de la tienda", autocomplete: "off" });
+  r.link.addEventListener("input", () => guardar(m.id, { link: r.link.value.trim() }));
+  r.abrir = el("a", { target: "_blank", rel: "noopener noreferrer", text: "Abrir ↗" });
+  r.quien = el("select", { id: id("quien") }, el("option", { value: "", text: "Nadie aún" }), MIEMBROS.map(n => el("option", { value: n, text: n })));
+  r.quien.addEventListener("change", () => guardar(m.id, { quien: r.quien.value }, true));
+  r.nota = el("textarea", { id: id("nota"), rows: 2, placeholder: "Ej.: en Ferretería X la tienen a $3.000, quedan 2" });
+  r.nota.addEventListener("input", () => guardar(m.id, { nota2: r.nota.value }));
+  r.eNombre = el("input", { id: id("enombre") });
+  r.eNombre.addEventListener("input", () => guardar(m.id, { nombre: r.eNombre.value.trim() || (m.custom ? "Material nuevo" : null) }));
+  r.eDesc = el("textarea", { id: id("edesc"), rows: 2 });
+  r.eDesc.addEventListener("input", () => guardar(m.id, { desc: r.eDesc.value.trim() || null }));
+  r.firma = el("div", { class: "firma" });
+  r.cantTxt = el("b");
+  const rango = m.max ? `${pesos(m.min)} – ${pesos(m.max)}` : (m.custom ? "" : "$0 (de la casa)");
+
+  nodo.append(boton, el("div", { class: "cuerpo" },
+    el("div", { class: "fila1" }, el("span", { class: "num mono", text: "#" + String(m.n).padStart(2, "0") }), r.nombre,
+      el("span", { class: `pill p${m.pri}`, text: "Prioridad " + m.pri }), el("span", { class: "pill sis", text: m.sis.toLowerCase() }), r.cant, r.mod),
+    r.desc,
+    el("div", { class: "meta" },
+      m.uso ? el("span", {}, "Para: ", el("b", { text: m.uso })) : null,
+      m.paso ? el("span", {}, "Paso ", el("b", { class: "mono", text: m.paso })) : null,
+      rango ? el("span", { class: "rango" }, "Estimado " + rango) : null),
+    el("div", { class: "campos" },
+      el("div", { class: "campo" }, el("label", { class: "lbl", for: id("precio"), text: "Valor que salió" }), el("div", { class: "precio-wrap" }, el("span", { text: "$" }), r.precio)),
+      el("div", { class: "campo c-link" }, el("label", { class: "lbl", for: id("link"), text: "Link" }), el("div", { class: "linkfila" }, r.link, r.abrir)),
+      el("div", { class: "campo" }, el("label", { class: "lbl", for: id("quien"), text: "Lo consigue" }), r.quien)),
+    el("details", { class: "mas" }, el("summary", { text: "Detalles, nota y editar" }),
+      el("div", { class: "masg" },
+        m.donde ? el("div", {}, el("div", { class: "lbl", text: "Dónde buscar" }), el("div", { text: m.donde })) : null,
+        m.nota ? el("div", {}, el("div", { class: "lbl", text: "Ojo" }), el("div", { text: m.nota })) : null,
+        el("div", { class: "campo full" }, el("label", { class: "lbl", for: id("nota"), text: "Nota del grupo" }), r.nota),
+        el("div", { class: "campo" }, el("label", { class: "lbl", for: id("enombre"), text: "Nombre genérico" }), r.eNombre),
+        el("div", { class: "campo" }, el("label", { class: "lbl", for: id("edesc"), text: "Descripción exacta" }), r.eDesc),
+        el("div", { class: "acciones full" },
+          m.custom ? null : el("button", { class: "btn mini", type: "button", onclick: () => { guardar(m.id, { nombre: null, desc: null }, true); r.eNombre.value = m.nombre0; r.eDesc.value = m.desc0; toast("Nombre y descripción originales"); } }, "Volver al texto original"),
+          m.custom ? el("button", { class: "btn mini peligro", type: "button", onclick: e => confirmarBorrar(e.currentTarget, m.id) }, "Borrar material") : null),
+        el("div", { class: "full" }, r.firma)))));
+
+  const actualizar = () => {
+    const s = st(m.id), v = m.custom ? { nombre: s.nombre || "Material nuevo", desc: s.desc || "" } : ver(m.id, m);
+    nodo.classList.toggle("ok", !!s.ok);
+    r.estadoTxt.textContent = s.ok ? "Conseguido" : "Falta";
+    boton.setAttribute("aria-pressed", s.ok ? "true" : "false");
+    boton.setAttribute("aria-label", (s.ok ? "Conseguido: " : "Falta: ") + v.nombre + ". Cambiar estado");
+    r.nombre.textContent = v.nombre; r.desc.textContent = v.desc;
+    r.mod.hidden = m.custom || !(s.nombre || s.desc); if (m.custom) { r.mod.hidden = false; r.mod.textContent = "agregado"; }
+    r.cant.textContent = "× " + (m.custom ? (s.cant || "?") : m.cant);
+    const act = document.activeElement;
+    if (act !== r.precio) r.precio.value = s.precio != null ? Number(s.precio).toLocaleString("es-CL") : "";
+    if (act !== r.link) r.link.value = s.link || "";
+    if (act !== r.quien) r.quien.value = s.quien || "";
+    if (act !== r.nota) r.nota.value = s.nota2 || "";
+    if (act !== r.eNombre) r.eNombre.value = v.nombre;
+    if (act !== r.eDesc) r.eDesc.value = v.desc;
+    const href = linkSeguro(s.link); r.abrir.hidden = !href; if (href) r.abrir.href = href;
+    const partes = [];
+    if (s.ok && s.okPor) partes.push(`Conseguido por ${s.okPor} ${hace(s.okAt)}`);
+    if (s.at) partes.push(`último cambio: ${s.por || "alguien"} ${hace(s.at)}`);
+    r.firma.textContent = partes.join(" · ");
+  };
+  actualizar();
+  return { nodo, actualizar, m };
+}
+function confirmarBorrar(b, id) {
+  if (b.dataset.armado) { borrar(id); toast("Material borrado"); return; }
+  b.dataset.armado = "1"; b.textContent = "¿Seguro? Toca de nuevo"; setTimeout(() => { delete b.dataset.armado; b.textContent = "Borrar material"; }, 3000);
+}
+function pasaFiltro(m) {
+  const s = st(m.id);
+  if (filtro.estado === "faltan" && s.ok) return false;
+  if (filtro.estado === "ok" && !s.ok) return false;
+  if (filtro.sis && m.sis !== filtro.sis) return false;
+  if (filtro.q) {
+    const t = (m.nombre + " " + m.desc + " " + m.uso + " " + m.donde + " " + m.sis + " " + (s.nota2 || "") + " " + (s.quien || "")).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    if (!filtro.q.split(/\s+/).every(w => t.includes(w))) return false;
+  }
+  return true;
+}
+function renderMateriales() {
+  const cont = $("#materiales"); const lista = materiales();
+  const vivos = new Set(lista.map(m => m.id));
+  for (const id of filas.keys()) if (!vivos.has(id)) filas.delete(id);
+  const visibles = lista.filter(pasaFiltro);
+  const grupos = new Map();
+  const clave = m => filtro.agrupar === "sis" ? m.sis : filtro.agrupar === "quien" ? (st(m.id).quien || "Sin asignar") : m.pri;
+  const orden = filtro.agrupar === "sis" ? SISTEMAS : filtro.agrupar === "quien" ? [...MIEMBROS, "Sin asignar"] : [1, 2, 3];
+  for (const k of orden) grupos.set(k, []);
+  for (const m of visibles) { const k = clave(m); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(m); }
+  const frag = document.createDocumentFragment();
+  for (const [k, ms] of grupos) {
+    if (!ms.length) continue;
+    const ok = ms.filter(m => st(m.id).ok).length;
+    const titulo = filtro.agrupar === "pri" ? `${k} · ${PRI[k]}` : filtro.agrupar === "sis" ? k.charAt(0) + k.slice(1).toLowerCase() : k;
+    const lst = el("div", { class: "lista" });
+    for (const m of ms) {
+      let f = filas.get(m.id);
+      if (!f || f.m.nombre0 !== m.nombre0 || f.m.custom !== m.custom) { f = fichaMaterial(m); filas.set(m.id, f); } else f.actualizar();
+      lst.append(f.nodo);
+    }
+    frag.append(el("section", { class: "grupo" }, el("header", {}, el("h2", { text: titulo }), el("span", { class: "cuenta", text: `${ok} de ${ms.length} conseguidos` })), lst));
+  }
+  const foco = document.activeElement && cont.contains(document.activeElement) ? document.activeElement : null;
+  cont.replaceChildren(frag);
+  if (foco && document.body.contains(foco)) foco.focus({ preventScroll: true });
+  if (!visibles.length) cont.append(el("div", { class: "vacio", text: filtro.estado === "faltan" && !filtro.q ? "No falta nada con estos filtros. ¡Bien!" : "Nada coincide con la búsqueda o el filtro." }));
+}
+
+/* ---------- resumen ---------- */
+function renderResumen() {
+  const lista = materiales();
+  const ok = lista.filter(m => st(m.id).ok);
+  const gastado = lista.reduce((a, m) => a + (+st(m.id).precio || 0), 0);
+  const conPrecio = lista.filter(m => st(m.id).precio != null && st(m.id).precio !== "").length;
+  const faltaMin = lista.filter(m => !st(m.id).ok).reduce((a, m) => a + (m.min || 0), 0);
+  const faltaMax = lista.filter(m => !st(m.id).ok).reduce((a, m) => a + (m.max || 0), 0);
+  const pct = lista.length ? Math.round(100 * ok.length / lista.length) : 0;
+  const barra = $("#barra"); barra.replaceChildren();
+  for (const p of [1, 2, 3]) { const n = ok.filter(m => m.pri === p).length; if (n) barra.append(el("i", { class: "b" + p, style: `width:${100 * n / lista.length}%` })); }
+  barra.setAttribute("aria-label", `${ok.length} de ${lista.length} materiales conseguidos`);
+  const p1 = lista.filter(m => m.pri === 1), p1f = p1.filter(m => !st(m.id).ok).length;
+  $("#cifras").replaceChildren(
+    el("div", { class: "cifra" }, el("div", { class: "v" }, String(ok.length), el("small", { text: ` / ${lista.length}` })), el("div", { class: "d", text: `materiales conseguidos (${pct} %)` })),
+    el("div", { class: "cifra" }, el("div", { class: "v", text: pesos(gastado) }), el("div", { class: "d", text: `gastado · ${conPrecio} con valor anotado` })),
+    el("div", { class: "cifra" }, el("div", { class: "v", text: pesos(gastado / 4) }), el("div", { class: "d", text: "por persona (4)" })),
+    el("div", { class: "cifra" }, el("div", { class: "v", text: `${pesos(faltaMin)} – ${pesos(faltaMax).slice(1)}` }), el("div", { class: "d", text: "estimado de lo que falta (no verificado)" })),
+    el("div", { class: "cifra" }, el("div", { class: "v", style: p1f ? "color:var(--p1)" : "color:var(--ok)", text: String(p1f) }), el("div", { class: "d", text: "difíciles que faltan (prioridad 1)" })));
+  $("#porpri").replaceChildren(...[1, 2, 3].map(p => { const t = lista.filter(m => m.pri === p); return el("span", {}, el("i", { class: "sw", style: `background:var(--p${p})` }), `${PRI[p]}: ${t.filter(m => st(m.id).ok).length}/${t.length}`); }));
+  $("#n-materiales").textContent = `${ok.length}/${lista.length}`;
+}
+
+/* ---------- cortes, herramientas, pasos ---------- */
+function renderCortes() {
+  const tb = $("#cortes"); const hechos = DATOS.cortes.filter(c => st(c.id).ok).length;
+  $("#n-cortes").textContent = `${hechos}/${DATOS.cortes.length}`;
+  tb.replaceChildren(...DATOS.cortes.map(c => {
+    const s = st(c.id);
+    const cb = el("input", { type: "checkbox", id: "chk-" + c.id, "aria-label": "Cortada: " + c.pieza, onchange: e => guardar(c.id, { ok: e.target.checked }, true) }); cb.checked = !!s.ok;
+    return el("tr", { class: s.ok ? "hecho" : "" }, el("td", { class: "chk" }, cb), el("td", { class: "pz" }, el("b", { text: c.pieza })), el("td", { text: c.de }), el("td", {}, el("span", { class: "medida", text: c.medida })), el("td", { class: "mono", text: String(c.cant) }), el("td", { text: c.como }), el("td", { class: "mono", text: c.paso }));
+  }));
+}
+function renderHerramientas() {
+  const tb = $("#herramientas"); const listas = DATOS.herramientas.filter(h => st(h.id).ok).length;
+  $("#n-herramientas").textContent = `${listas}/${DATOS.herramientas.length}`;
+  const act = document.activeElement;
+  if (act && tb.contains(act) && act.tagName === "SELECT") return;
+  tb.replaceChildren(...DATOS.herramientas.map(h => {
+    const s = st(h.id);
+    const cb = el("input", { type: "checkbox", id: "chk-" + h.id, "aria-label": "Lista: " + h.nombre, onchange: e => guardar(h.id, { ok: e.target.checked }, true) }); cb.checked = !!s.ok;
+    const sel = el("select", { id: "q-" + h.id, "aria-label": "Quién trae " + h.nombre, onchange: e => guardar(h.id, { quien: e.target.value }, true) }, el("option", { value: "", text: "—" }), MIEMBROS.map(n => el("option", { value: n, text: n })), el("option", { value: "Prestada", text: "Prestada" }));
+    sel.value = s.quien || "";
+    return el("tr", { class: s.ok ? "hecho" : "" }, el("td", { class: "chk" }, cb), el("td", { class: "pz" }, el("b", { text: h.nombre })), el("td", { text: h.para }), el("td", { text: h.alt }), el("td", {}, sel));
+  }));
+}
+function codigosPaso(txt) {
+  const out = new Set();
+  for (const parte of (txt || "").split(/[,\s]+/)) {
+    const r = parte.match(/^([A-F])(\d+)-([A-F])(\d+)$/);
+    if (r) { for (let i = +r[2]; i <= +r[4]; i++) out.add(r[1] + i); }
+    else if (/^[A-F]\d*$/.test(parte)) out.add(parte);
+  }
+  return out;
+}
+function renderPasos() {
+  const lista = materiales(); const cont = $("#pasos");
+  const hechos = DATOS.pasos.filter(p => st("p-" + p.cod).ok).length;
+  $("#n-pasos").textContent = `${hechos}/${DATOS.pasos.length}`;
+  const etapas = new Map();
+  for (const p of DATOS.pasos) { if (!etapas.has(p.etapa)) etapas.set(p.etapa, []); etapas.get(p.etapa).push(p); }
+  cont.replaceChildren(...[...etapas].map(([etapa, ps]) => el("section", { class: "etapa" },
+    el("h2", {}, etapa, el("span", { class: "cuenta", text: `${ps.filter(p => st("p-" + p.cod).ok).length} de ${ps.length} hechos` })),
+    el("ol", { class: "pasos" }, ps.map(p => {
+      const id = "p-" + p.cod, s = st(id);
+      const necesita = lista.filter(m => codigosPaso(m.paso).has(p.cod));
+      const faltan = necesita.filter(m => !st(m.id).ok);
+      const cb = el("input", { type: "checkbox", id: "chk-" + id, "aria-label": "Hecho: " + p.titulo, onchange: e => guardar(id, { ok: e.target.checked }, true) }); cb.checked = !!s.ok;
+      return el("li", { class: "paso" + (s.ok ? " hecho" : "") }, cb, el("span", { class: "cod", text: p.cod }), el("span", { class: "tit", text: p.titulo }),
+        necesita.length ? el("span", { class: "chip " + (faltan.length ? "no" : "listo"), text: faltan.length ? `faltan ${faltan.length} de ${necesita.length} materiales` : `${necesita.length} materiales listos` }) : el("span"),
+        faltan.length ? el("span", { class: "falta", text: "Falta: " + faltan.map(m => m.nombre).join(", ") }) : null);
+    })))));
+}
+
+/* ---------- render general ---------- */
+let tab = "materiales";
+function render() { renderResumen(); renderMateriales(); renderCortes(); renderHerramientas(); renderPasos(); }
+function refrescar(id) {
+  const f = filas.get(id); if (f) f.actualizar();
+  renderResumen();
+  if (!id.startsWith("m") && !id.startsWith("x-")) { renderCortes(); renderHerramientas(); renderPasos(); }
+  else if (tab === "pasos") renderPasos();
+}
+function irA(t) {
+  tab = t;
+  for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.tab === t ? "true" : "false");
+  for (const v of ["materiales", "cortes", "herramientas", "pasos"]) $("#v-" + v).hidden = v !== t;
+  if (t === "pasos") renderPasos();
+  try { history.replaceState(null, "", "#" + t); } catch {}
+}
+
+/* ---------- acciones ---------- */
+function textoFaltan() {
+  const lista = materiales().filter(m => !st(m.id).ok);
+  let out = "*Falta conseguir – auto a vapor*\n";
+  for (const p of [1, 2, 3]) {
+    const ms = lista.filter(m => m.pri === p); if (!ms.length) continue;
+    out += `\n*${p}) ${PRI[p]}*\n` + ms.map(m => `• ${m.nombre} (×${m.custom ? (st(m.id).cant || "?") : m.cant}): ${m.desc}${st(m.id).quien ? " → " + st(m.id).quien : ""}`).join("\n") + "\n";
+  }
+  return lista.length ? out : "¡Ya está todo conseguido!";
+}
+function csv() {
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const filasCsv = [["N", "Prioridad", "Sistema", "Nombre", "Descripción exacta", "Cantidad", "Para qué", "Paso", "Conseguido", "Valor", "Link", "Lo consigue", "Nota"]];
+  for (const m of materiales()) { const s = st(m.id); filasCsv.push([m.n, m.pri, m.sis, m.nombre, m.desc, m.custom ? s.cant : m.cant, m.uso, m.paso, s.ok ? "Sí" : "No", s.precio ?? "", s.link || "", s.quien || "", s.nota2 || ""]); }
+  return "﻿" + filasCsv.map(f => f.map(q).join(";")).join("\r\n");
+}
+async function descargarCsv() {
+  const data = csv(), filename = "materiales-auto-vapor.csv";
+  if (window.claude && typeof window.claude.use === "function") {
+    try { const d = await window.claude.use("downloads"); if (d) { await d.save({ filename, data: new Blob([data], { type: "text/csv" }) }); return; } } catch (e) { if (e && e.code) { toast("No se descargó"); return; } }
+  }
+  const a = el("a", { href: URL.createObjectURL(new Blob([data], { type: "text/csv" })), download: filename }); document.body.append(a); a.click(); a.remove();
+}
+
+function iniciar() {
+  const yoSel = $("#yo");
+  for (const n of MIEMBROS) yoSel.append(el("option", { value: n, text: n }));
+  yoSel.value = yo; yoSel.onchange = () => { yo = yoSel.value; ls.set("auto-vapor-yo", yo); };
+  for (const s of SISTEMAS) { $("#sistema").append(el("option", { value: s, text: s.charAt(0) + s.slice(1).toLowerCase() })); $("#n-sis").append(el("option", { value: s, text: s.charAt(0) + s.slice(1).toLowerCase() })); }
+  let tq; $("#buscar").addEventListener("input", e => { clearTimeout(tq); tq = setTimeout(() => { filtro.q = e.target.value.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); renderMateriales(); }, 120); });
+  for (const b of document.querySelectorAll(".seg button")) { b.setAttribute("aria-pressed", b.dataset.f === filtro.estado ? "true" : "false"); b.onclick = () => { filtro.estado = b.dataset.f; ls.set("auto-vapor-f", filtro.estado); for (const x of document.querySelectorAll(".seg button")) x.setAttribute("aria-pressed", x === b ? "true" : "false"); renderMateriales(); }; }
+  $("#sistema").onchange = e => { filtro.sis = e.target.value; renderMateriales(); };
+  $("#agrupar").value = filtro.agrupar; $("#agrupar").onchange = e => { filtro.agrupar = e.target.value; ls.set("auto-vapor-g", filtro.agrupar); renderMateriales(); };
+  for (const b of document.querySelectorAll(".tabs button")) b.onclick = () => irA(b.dataset.tab);
+  $("#b-copiar").onclick = async () => { const t = textoFaltan(); try { await navigator.clipboard.writeText(t); toast("Copiado. Pégalo en el WhatsApp del grupo"); } catch { const ta = el("textarea", { style: "position:fixed;opacity:0" }); ta.value = t; document.body.append(ta); ta.select(); try { document.execCommand("copy"); toast("Copiado"); } catch { toast("No se pudo copiar"); } ta.remove(); } };
+  $("#b-csv").onclick = descargarCsv;
+  $("#b-nuevo").onclick = () => { $("#f-nuevo").hidden = false; $("#n-nombre").focus(); };
+  $("#n-cancelar").onclick = () => { $("#f-nuevo").hidden = true; };
+  $("#f-nuevo").addEventListener("submit", e => {
+    e.preventDefault();
+    const nombre = $("#n-nombre").value.trim(); if (!nombre) return;
+    const id = "x-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    guardar(id, { custom: true, creado: Date.now(), nombre, desc: $("#n-desc").value.trim(), cant: $("#n-cant").value.trim(), pri: +$("#n-pri").value, sis: $("#n-sis").value, uso: $("#n-uso").value.trim() }, true);
+    e.target.reset(); e.target.hidden = true; render(); toast("Material agregado");
+  });
+  const h = (location.hash || "").slice(1); if (["materiales", "cortes", "herramientas", "pasos"].includes(h)) irA(h);
+  render();
+  setInterval(() => { for (const f of filas.values()) f.actualizar(); }, 60000);
+  conectar();
+}
+iniciar();
+</script>
+
+</body>
+</html>
